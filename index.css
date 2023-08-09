@@ -44,7 +44,7 @@ pre {
   overflow: auto;
   user-select: all;
   position: relative;
-  margin: 1rem 0 0;
+  margin: 1rem 0;
   max-height: 50vh;
 }
 pre:empty {

@@ -11,7 +11,7 @@
 
 <body class="wrp">
 	<h1>تبدیل قالب بلاگفا به بلاگ بیان</h1>
-	<p>با یک کلیک	 قالب‌های بلاگفا را به قالب بلاگ بیان تبدیل کنید
+	<p>با یک کلیک قالب‌های بلاگفا را به قالب بلاگ بیان تبدیل کنید
 	</p>
 	<textarea rows="10" placeholder="کد قالب بلاگفا" id="blogfa"></textarea>
 	<div class="options">
@@ -20,6 +20,21 @@
 	<button class="btn">تبدیل</button>
 	<pre rows="10" placeholder="bayan" id="bayan"></pre>
 	<a class="btn trash" href="https://trash.blog.ir" target="_blank">زباله دان</a>
+	<script>
+		const blogfa = document.querySelector("#blogfa"),
+			bayan = document.querySelector("#bayan");
+
+		document.querySelector(".btn").addEventListener("click", () => {
+			try {
+				bayan.innerText = generateBayanTemplate(blogfa.value, {
+					commentJs: document.querySelector("#commentJs").checked,
+				});
+			} catch (e) {
+				console.log(e);
+				bayan.innerText = e;
+			}
+		});
+	</script>
 </body>
 
 </html>

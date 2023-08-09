@@ -316,17 +316,3 @@ function generateBayanTemplate(blogfaTemplate, options) {
   bayanCode = TranslatePost(bayanCode, options);
   return bayanCode;
 }
-
-const blogfa = document.querySelector("#blogfa"),
-  bayan = document.querySelector("#bayan");
-
-document.querySelector(".btn").addEventListener("click", () => {
-  try {
-    bayan.innerText = generateBayanTemplate(blogfa.value, {
-      commentJs: document.querySelector("#commentJs").checked,
-    });
-  } catch (e) {
-    console.log(e);
-    bayan.innerText = e;
-  }
-});
