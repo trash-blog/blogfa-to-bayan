@@ -192,8 +192,17 @@ function TranslatePost(blogfaCode, options) {
   }
   //comment javascript and form tags
   if (options.commentJs) {
-    for (const el of code.querySelectorAll("script,form,input,select")) {
-      el.outerHTML = "<!--" + el.outerHTML + "-->";
+    for (const el of code.querySelectorAll("script,form,input,select,button")) {
+      if (el.tagName.toUpperCase() === "BUTTON") {
+        var linkEl = document.createElement('a');
+        for (var i = 0, l = el.attributes.length; i < l; ++i) {
+          linkEl.setAttribute(el.attributes.item(i).nodeName, el.attributes.item(i).nodeValue);
+        }
+        linkEl.innerHTML = el.innerHTML;
+        el.outerHTML = linkEl.outerHTML;
+      } else {
+        el.outerHTML = "<!--" + el.outerHTML + "-->";
+      }
     }
   }
 
@@ -314,7 +323,7 @@ const blogfa = document.querySelector("#blogfa"),
 document.querySelector(".btn").addEventListener("click", () => {
   try {
     bayan.innerText = generateBayanTemplate(blogfa.value, {
-      commentJs: document.querySelector("#commentJs").value,
+      commentJs: document.querySelector("#commentJs").checked,
     });
   } catch (e) {
     console.log(e);
