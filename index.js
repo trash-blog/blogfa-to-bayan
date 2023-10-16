@@ -7,7 +7,8 @@ const general = {
   "<-BlogArchiveLink->": "/archive",
 
   "<-BlogAuthor->": "(*blog_title*)",
-  "<-BlogEmail->": "آدرس ایمیل",
+  "<-BlogEmail->": "#",
+  "<-BlogProfileLink->": "#",
   "<-BlogDescription->": "(*blog_short_description*)",
   "<-BlogTitle->": "(*blog_title*)",
   " <-BlogCustomHtml->":
@@ -91,17 +92,21 @@ const blogfaSidebar = {
 };
 
 const postComments = `<div id="comments_wrapper">
+                      <div class="comments_wrapper_header comments_clearfix">
+                      <span class="right">نظرات ((*post_comment_count*))</span>
+                      <span class="left"><a href="#">بستن</a></span>
+                      </div>
                       <box:post_comments>
                         <div class="comments">
                             <view:post_comments>
-                                <div class="comment clear">
-                                    <div class="right" style="width:34px">
-                                        <img class="avatar" src="(*comment_avatar*)" alt="(*comment_fullname*)">
+                                <div class="comment comments_clearfix">
+                                    <div class="right">
+                                        <img class="avatar comment_avatar" src="(*comment_avatar*)" alt="(*comment_fullname*)">
                                     </div>
                                     <div class="comment_bubble">
                                         <div class="smalltip">
                                             <a href="(*comment_website*)">(*comment_fullname*)</a>
-                                            <span>(*comment_date*)</span>
+                                            <span class="left">(*comment_date*)</span>
                                         </div>
                                         <div>
                                             (*comment_body*)
@@ -111,12 +116,12 @@ const postComments = `<div id="comments_wrapper">
                                 <check:if comment_reply>
                                     <div class="comment is-reply">
                                         <div class="right" style="width:34px">
-                                            <img class="avatar" src="(*comment_reply_avatar*)" alt="(*comment_reply_fullname*)">
+                                            <img class="avatar comment_avatar" src="(*comment_reply_avatar*)" alt="(*comment_reply_fullname*)">
                                         </div>
-                                        <div class="comment_bubble">
+                                        <div class="comment_bubble comment_reply_bubble">
                                             <div class="smalltip">
                                                 <span>(*comment_reply_fullname*)</span>
-                                                <span>(*comment_reply_date*)</span>
+                                                <span class="left">(*comment_reply_date*)</span>
                                             </div>
                                             <div class="comment_content">
                                                 (*comment_reply*)
@@ -131,9 +136,14 @@ const postComments = `<div id="comments_wrapper">
                   </div>
 <style>
 .comment_bubble{
-border: 1px solid #000;
+background:#fff;
+border: 1px solid #0004;
 margin: 10px 44px 10px 0;
 padding: 8px;
+border-radius:4px;
+}
+.comment_reply_bubble{
+  margin-top:0;
 }
 .comment.is-reply {
   margin-right: 40px;
@@ -146,15 +156,34 @@ padding: 8px;
   max-width: 600px;
   height: 100%;
   top: 0;
-  background: #fff;
-  padding: 1rem;
+  background: #f4f4f4;
+  border-right: 1px solid #0004;
+  color: #333;
   z-index: 20;
   transform: translateX(-100%);
   transition: 250ms ease;
   overflow: auto;
 }
+.comment_avatar{
+  margin:0;
+  width: 34px;
+  border-radius: 4px;
+}
+.comments_wrapper_header{
+  background: #fff;
+  border-bottom: 1px solid #0004;
+  padding: 10px 20px;
+}
+.comments{
+  padding: 1rem;
+}
 #comments_wrapper:target {
   transform: scale(1);
+}
+.comments_clearfix:after{
+  content: " ";
+  display: table;
+  clear: both;
 }
 </style>`;
 
@@ -172,21 +201,77 @@ function repleaceFromObject(object, string) {
   return s;
 }
 
-function TranslatePost(blogfaCode, options) {
-  let parser = new DOMParser();
-  let code = parser.parseFromString(blogfaCode, "text/html");
+function TranslatePost(_code) {
+  let code = _code;
   let blogfaTag = code.querySelector("BLOGFA");
 
   if (code.querySelector("BlogComment"))
     code.querySelector(
       "BlogComment"
     ).outerHTML = `<a href="(*post_link*)#comments_wrapper">(*post_comment_count*) نظر</a>`;
+
+  let postList = translatePostList(blogfaTag.innerHTML);
+  let postFull = translatePostDetial(blogfaTag.innerHTML);
+  let page = translatePage(postFull);
+  blogfaTag.outerHTML = postList + postFull + page;
+
+  return code;
+}
+
+function translatePostList(blogfaCode) {
+  let body = blogfaCode.replace("(*post_full_content*)", "(*post_summary*)");
+  let postList = `<box:post_list>
+      <check:if post_list_title>
+        <div class="item_success">(*post_list_title*)</div>
+      </check:if>
+      <view:post_list>
+      ${body}
+      </view:post_list>
+    </box:post_list>
+  `;
+  return postList;
+}
+function translatePostDetial(blogfaCode) {
+  let postDetail = blogfaCode;
+  let postContentAndComment = "(*post_full_content*)" + postComments;
+
+  postDetail = postDetail.replace(
+    new RegExp("<check:if.*post_has_read_more.*", "ig"),
+    ""
+  );
+  postDetail = postDetail.replace(
+    "(*post_full_content*)",
+    postContentAndComment
+  );
+  return "<box:post_detail>" + postDetail + "</box:post_detail>";
+}
+function translatePage(post) {
+  let pageCode = post.replace("(*post_full_content*)", "(*page_content*)");
+
+  let convert = {
+    "(*post": "(*page",
+    "box:post": "box:page",
+    "view:post": "view:page",
+  }
+  pageCode = repleaceFromObject(convert, pageCode);
+
+  let notInPage = {
+    "(*page_date*)": "",
+    "(*page_author*)": "",
+    "(*page_seq_num*)": "",
+  };
+  pageCode = repleaceFromObject(notInPage, pageCode);
+
+  return pageCode;
+}
+function TranslateOther(_code, options) {
+  let code = _code
   code.querySelector("head").innerHTML +=
     "<head:meta></head:meta><head:style></head:style><head:script></head:script>";
 
   //remove blogfa meta tags
   for (const meta of code.head.querySelectorAll(
-    "[http-equiv],[http-equiv],title,[name=description],[name=generator],[property*=og],[name*=twitter],[rel=alternate],[name=keywords],link[rel=preconnect]"
+    "[http-equiv],title,[name=description],[name=generator],[property*=og],[name*=twitter],[rel=alternate],[name=keywords],link[rel=preconnect]"
   )) {
     meta.remove();
   }
@@ -230,11 +315,6 @@ function TranslatePost(blogfaCode, options) {
     svg.removeAttribute("xmlns");
     svg.removeAttribute("xmlns:xlink");
   }
-  let postList = translatePostList(blogfaTag.innerHTML);
-  let postFull = translatePostDetial(blogfaTag.innerHTML);
-  let page = translatePage(postFull);
-  blogfaTag.outerHTML = postList + postFull + page;
-
   //remove separator attribute from post tags
   for (let view of [
     ...code.getElementsByTagName("view:post_tags"),
@@ -260,59 +340,19 @@ function TranslatePost(blogfaCode, options) {
   if (code.getElementsByTagName("box:page_categories")[0])
     code.getElementsByTagName("box:page_categories")[0].remove();
 
-  return "<!DOCTYPE html>" + code.documentElement.outerHTML;
-}
-
-function translatePostList(blogfaCode) {
-  let body = blogfaCode.replace("(*post_full_content*)", "(*post_summary*)");
-  let postList = `<box:post_list>
-      <check:if post_list_title>
-        <div class="item_success">(*post_list_title*)</div>
-      </check:if>
-      <view:post_list>
-      ${body}
-      </view:post_list>
-    </box:post_list>
-  `;
-  return postList;
-}
-function translatePostDetial(blogfaCode) {
-  let postDetail = blogfaCode;
-
-  let postContentAndComment = "(*post_full_content*)" + postComments;
-
-  postDetail = postDetail.replace(
-    new RegExp("<check:if.*post_has_read_more.*", "ig"),
-    ""
-  );
-  postDetail = postDetail.replace(
-    "(*post_full_content*)",
-    postContentAndComment
-  );
-  return "<box:post_detail>" + postDetail + "</box:post_detail>";
-}
-function translatePage(post) {
-  let pageCode = post.replace("(*post_full_content*)", "(*page_content*)");
-  pageCode = pageCode.replaceAll("(*post", "(*page");
-  pageCode = pageCode.replaceAll("box:post", "box:page");
-  pageCode = pageCode.replaceAll("view:post", "view:page");
-
-  let notInPage = {
-    "(*page_date*)": "",
-    "(*page_author*)": "",
-    "(*page_seq_num*)": "",
-  };
-  pageCode = repleaceFromObject(notInPage, pageCode);
-
-  return pageCode;
+  return code
 }
 
 //generate Bayan Template
 function generateBayanTemplate(blogfaTemplate, options) {
-  let bayanCode = repleaceFromObject(general, blogfaTemplate);
-  bayanCode = repleaceFromObject(blogfaPagination, bayanCode);
-  bayanCode = repleaceFromObject(blogfaSidebar, bayanCode);
-  bayanCode = repleaceFromObject(blogfaPost, bayanCode);
-  bayanCode = TranslatePost(bayanCode, options);
-  return bayanCode;
+  let all = Object.assign(general, blogfaPagination, blogfaSidebar, blogfaPost);
+  let bayanCode = repleaceFromObject(all, blogfaTemplate);
+  let parser = new DOMParser();
+  let code = parser.parseFromString(bayanCode, "text/html");
+  bayanCode = TranslatePost(code, options);
+  bayanCode = TranslateOther(bayanCode, options);
+  if (options.extractCss){
+    bayanCode = extractCss(bayanCode)
+  }
+  return "<!DOCTYPE html>" + bayanCode.documentElement.outerHTML;
 }

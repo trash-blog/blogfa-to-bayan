@@ -69,7 +69,7 @@ pre:empty {
 @media (prefers-color-scheme: dark) {
   body {
     --color-txt: #f1f6fb;
-    --color-bg: #21282f;
+    --color-bg: #14181f;
   }
 }
 
