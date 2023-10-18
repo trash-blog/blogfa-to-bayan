@@ -2,10 +2,15 @@ body {
   margin: 0;
   padding: 1rem;
   font-family: "sahel", "vazirmatn", "vazir", "b yekan", System;
-  --color-txt: #21282f;
-  --color-bg: #f1f6fb;
+  --color-fg: #11182f;
+  --color-bg: #fff;
   background: var(--color-bg);
-  color: var(--color-txt);
+  color: var(--color-fg);
+}
+
+::selection{
+  color: var(--color-bg);
+  background: var(--color-fg);
 }
 
 h1 {
@@ -50,17 +55,45 @@ pre {
 pre:empty {
   display: none;
 }
-.arrow {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  margin: auto;
-  display: block;
+
+input[type="checkbox"] {
+  appearance: none;
+  background: var(--color-fg);
+  border-radius: 0.25em;
+  height: 1em;
+  margin: 0;
+  margin-inline-end: 0.5rem;
+  position: relative;
+  vertical-align: middle;
+  width: 1em;
 }
-.arrow-path {
-  fill: currentColor;
-  fill-rule: evenodd;
-  clip-rule: evenodd;
+input[type="checkbox"]:checked::after,
+input[type="checkbox"]:checked::before {
+  animation: checkbox 250ms ease;
+  background: var(--color-bg);
+  content: "";
+  display: block;
+  position: absolute;
+  width: 25%;
+}
+input[type="checkbox"]:checked::before {
+  transform: rotate(45deg);
+  height: 75%;
+  top: 12.5%;
+  right: 25%;
+}
+input[type="checkbox"]:checked::after {
+  transform: rotate(-45deg);
+  width: 25%;
+  height: 50%;
+  top: 33.333%;
+  left: 25%;
+}
+@keyframes checkbox {
+  0% {
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
 }
 
 .blogfaCode {
@@ -68,8 +101,8 @@ pre:empty {
 }
 @media (prefers-color-scheme: dark) {
   body {
-    --color-txt: #f1f6fb;
-    --color-bg: #14181f;
+    --color-fg: #f1f6fb;
+    --color-bg: #020408;
   }
 }
 
@@ -77,19 +110,19 @@ pre:empty {
   margin-bottom: 1rem;
 }
 .btn {
-  line-height: 1em;
-  padding: 0.75em;
-  background: var(--color-txt);
-  color: var(--color-bg);
-  border: none;
+  background: var(--color-fg);
   border-radius: 4px;
+  border: none;
+  color: var(--color-bg);
+  display: inline-block;
+  font-family: inherit;
   font-size: 1.1em;
   font-weight: 900;
+  line-height: 1em;
   min-width: 5em;
-  font-family: inherit;
-  display: inline-block;
-  text-decoration: navajowhite;
+  padding: 0.75em;
   text-align: center;
+  text-decoration: none;
 }
 
 .btn:focus {
@@ -104,7 +137,24 @@ pre:empty {
 
 .btn.trash {
   float: left;
-  color: var(--color-txt);
+  color: var(--color-fg);
   background: transparent;
   border: solid currentColor 1px;
+}
+#bayanHTML::before,
+#bayanCSS::after {
+  background: var(--color-fg);
+  border-bottom-right-radius: var(--borderRradius);
+  color: var(--color-bg);
+  content: "ساختار قالب";
+  display: block;
+  font: inherit;
+  left: 0;
+  line-height: 1;
+  padding: 0.5rem;
+  position: absolute;
+  top: 0;
+}
+#bayanCSS::after {
+  content: "CSS قالب";
 }
