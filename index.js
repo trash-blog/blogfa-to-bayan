@@ -91,7 +91,7 @@ const blogfaSidebar = {
   BlogPreviousItems: "view:recent_posts",
 };
 
-const postComments = `<div id="comments_wrapper">
+const postCommentsHTML = `<div id="comments_wrapper">
                       <div class="comments_wrapper_header comments_clearfix">
                       <span class="right">نظرات ((*post_comment_count*))</span>
                       <span class="left"><a href="#">بستن</a></span>
@@ -115,7 +115,7 @@ const postComments = `<div id="comments_wrapper">
                                 </div>
                                 <check:if comment_reply>
                                     <div class="comment is-reply">
-                                        <div class="right" style="width:34px">
+                                        <div class="right">
                                             <img class="avatar comment_avatar" src="(*comment_reply_avatar*)" alt="(*comment_reply_fullname*)">
                                         </div>
                                         <div class="comment_bubble comment_reply_bubble">
@@ -133,8 +133,9 @@ const postComments = `<div id="comments_wrapper">
                         </div>
                     </box:post_comments>
 	                  (*comment_add_form*)
-                  </div>
-<style>
+                  </div>`;
+
+let postCommentsCSS = `/*-Comment Styles-*/
 .comment_bubble{
 background:#fff;
 border: 1px solid #0004;
@@ -184,8 +185,7 @@ border-radius:4px;
   content: " ";
   display: table;
   clear: both;
-}
-</style>`;
+}`;
 
 if (!String.prototype.replaceAll) {
   String.prototype.replaceAll = function (from, to) {
@@ -201,7 +201,7 @@ function repleaceFromObject(object, string) {
   return s;
 }
 
-function TranslatePost(_code) {
+function TranslatePost(_code, options) {
   let code = _code;
   let blogfaTag = code.querySelector("BLOGFA");
 
@@ -211,7 +211,7 @@ function TranslatePost(_code) {
     ).outerHTML = `<a href="(*post_link*)#comments_wrapper">(*post_comment_count*) نظر</a>`;
 
   let postList = translatePostList(blogfaTag.innerHTML);
-  let postFull = translatePostDetial(blogfaTag.innerHTML);
+  let postFull = translatePostDetial(blogfaTag.innerHTML, options);
   let page = translatePage(postFull);
   blogfaTag.outerHTML = postList + postFull + page;
 
@@ -231,18 +231,19 @@ function translatePostList(blogfaCode) {
   `;
   return postList;
 }
-function translatePostDetial(blogfaCode) {
+function translatePostDetial(blogfaCode, options) {
   let postDetail = blogfaCode;
-  let postContentAndComment = "(*post_full_content*)" + postComments;
 
   postDetail = postDetail.replace(
     new RegExp("<check:if.*post_has_read_more.*", "ig"),
     ""
   );
-  postDetail = postDetail.replace(
-    "(*post_full_content*)",
-    postContentAndComment
-  );
+  if (options.addCommentSection) {
+    postDetail = postDetail.replace(
+      "(*post_full_content*)",
+      "(*post_full_content*)" + postCommentsHTML
+    );
+  }
   return "<box:post_detail>" + postDetail + "</box:post_detail>";
 }
 function translatePage(post) {
@@ -343,16 +344,42 @@ function TranslateOther(_code, options) {
   return code
 }
 
+function extractCSS(_code, options) {
+  let code = _code
+  let styles = []
+  for (let s of code.querySelectorAll("style, link[rel=stylesheet]")) {
+    if (s.tagName === "LINK") {
+      styles.push(`@import url("${s.href}");`)
+    }
+    else if (s.tagName === "STYLE") {
+      styles.push(s.innerHTML)
+    }
+    s.remove()
+  }
+  if (options.addCommentSection) styles.push(postCommentsCSS)
+  return {
+    html: code,
+    css: styles.join("\n/*-*/\n")
+  }
+}
+
 //generate Bayan Template
 function generateBayanTemplate(blogfaTemplate, options) {
+  let output = {}
   let all = Object.assign(general, blogfaPagination, blogfaSidebar, blogfaPost);
   let bayanCode = repleaceFromObject(all, blogfaTemplate);
-  let parser = new DOMParser();
-  let code = parser.parseFromString(bayanCode, "text/html");
-  bayanCode = TranslatePost(code, options);
-  bayanCode = TranslateOther(bayanCode, options);
-  if (options.extractCss){
-    bayanCode = extractCss(bayanCode)
+  bayanCode = new DOMParser().parseFromString(bayanCode, "text/html");
+
+  if (options.extractCSS) {
+    let { html, css } = extractCSS(bayanCode, options)
+    bayanCode = html
+    output.css = css
+  } else {
+    if (options.addCommentSection) bayanCode.body.innerHTML += `<style>${postCommentsCSS}</style>`
   }
-  return "<!DOCTYPE html>" + bayanCode.documentElement.outerHTML;
+  bayanCode = TranslatePost(bayanCode, options);
+  bayanCode = TranslateOther(bayanCode, options);
+
+  output.html = "<!DOCTYPE html>" + bayanCode.documentElement.outerHTML
+  return output;
 }

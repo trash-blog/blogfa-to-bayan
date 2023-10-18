@@ -15,23 +15,36 @@
 	</p>
 	<textarea rows="10" placeholder="کد قالب بلاگفا" id="blogfa"></textarea>
 	<div class="options">
-		<label><input type="checkbox" checked id="commentJs">کامنت کردن جاوا اسکریپت و تگ‌های فرم </label>
+		<div class="option">
+			<label><input type="checkbox" checked id="commentJs">کامنت کردن جاوا اسکریپت و تگ‌های فرم </label>
+		</div>
+		<div class="option">
+			<label><input type="checkbox" checked id="extractCSS">جدا کردن css از ساختار قالب</label>
+		</div>
+		<div class="option">
+			<label><input type="checkbox" checked id="addCommentSection">افزودن بخش ارسال نظر</label>
+		</div>
 	</div>
 	<button class="btn">تبدیل</button>
-	<pre rows="10" placeholder="bayan" id="bayan"></pre>
+	<pre rows="10" id="bayanHTML"></pre>
+	<pre rows="10" id="bayanCSS"></pre>
 	<a class="btn trash" href="https://trash.blog.ir" target="_blank">زباله دان</a>
 	<script>
 		const blogfa = document.querySelector("#blogfa"),
-			bayan = document.querySelector("#bayan");
+			bayanHTML = document.querySelector("#bayanHTML");
 
 		document.querySelector(".btn").addEventListener("click", () => {
 			try {
-				bayan.innerText = generateBayanTemplate(blogfa.value, {
+				const output = generateBayanTemplate(blogfa.value, {
 					commentJs: document.querySelector("#commentJs").checked,
+					extractCSS: document.querySelector("#extractCSS").checked,
+					addCommentSection: document.querySelector("#addCommentSection").checked,
 				});
+				bayanHTML.innerText = output.html
+				bayanCSS.innerText = output.css || ""
 			} catch (e) {
 				console.log(e);
-				bayan.innerText = e;
+				bayanHTML.innerText = e;
 			}
 		});
 	</script>
