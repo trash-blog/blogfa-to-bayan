@@ -305,10 +305,19 @@ function TranslateOther(_code, options) {
       .querySelector('a[href="(*link_url*)"]')
       .setAttribute("alt", "(*link_alt*)");
   }
-  //replace recent posts 'items' attribute to 'max'
-  if (code.getElementsByTagName("view:recent_posts")[0]) {
-    let item = code.getElementsByTagName("view:recent_posts")[0];
-    item.removeAttribute("items");
+
+  // fix view:recent_posts without box:recent_post
+  for (const el of code.querySelectorAll("view\\:recent_posts:not(box\\:recent_posts view\\:recent_posts")) {
+    el.outerHTML = `<box:recent_posts>${el.outerHTML}</box:recent_posts>`
+  };
+
+  //replace recent_posts 'items' attribute to 'max'
+  for (const box of code.getElementsByTagName("box:recent_posts")) {
+    let view = code.querySelector("view\\:recent_posts[items]");
+    if (view) {
+      box.setAttribute("max", view.getAttribute("items"))
+      view.removeAttribute("items")
+    }
   }
 
   //remove xmlns from svg tags
